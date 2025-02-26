@@ -1,107 +1,91 @@
-name: CI/CD
+name: CI/CD Pipeline
 
-# Trigger the workflow on push and pull requests to main branch
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
-# Prevent multiple deployments running at the same time
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15  # Set timeout to prevent hanging jobs
-    
-    steps:
-    - uses: actions/checkout@v3  # Updated to v3
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v3  # Updated to v3
-      with:
-        node-version: '16.x'
-        cache: 'npm'
-    
-    - name: Cache Cypress binary
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/Cypress
-        key: cypress-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          cypress-${{ runner.os }}-
-    
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Lint
-      run: npm run lint
-      continue-on-error: false
-    
-    - name: Unit & Integration Tests
-      run: npm test -- --coverage --ci --maxWorkers=2
-    
-    - name: Upload test coverage
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage
-        path: coverage/
-        retention-days: 14
-    
-    - name: E2E Tests
-      run: npm run cy:run
-      env:
-        CI: true
-    
-    - name: Build
-      run: npm run build
-      env:
-        CI: true
 
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    timeout-minutes: 10
-    environment:
-      name: production
-      url: ${{ vars.APP_URL }}  # Configure this in GitHub repository settings
-    
+    strategy:
+      matrix:
+        node-version: [16.x]
+
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Use Node.js
+
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
-        node-version: '16.x'
+        node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          **/node_modules
+          ~/.cache/Cypress
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-modules-
+
     - name: Install dependencies
       run: npm ci
-    
-    - name: Build
-      run: npm run build
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Run unit tests
+      run: npm run test
       env:
         CI: true
-        NODE_ENV: production
-    
-    - name: Deploy
+
+    - name: Run integration tests
+      run: npm run test:integration
       env:
-        DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
-        NODE_ENV: production
-      run: |
-        if [ -z "$DEPLOY_TOKEN" ]; then
-          echo "Error: DEPLOY_TOKEN is not set"
-          exit 1
-        fi
-        
-        echo "Starting deployment to production..."
-        # Add deployment script here based on your hosting platform
-        # For example, if using AWS S3 + CloudFront:
-        # aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
-        # aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_ID }} --paths "/*"
-        
-        echo "Deployment completed successfully"
+        CI: true
+
+    - name: Run Cypress E2E tests
+      uses: cypress-io/github-action@v6
+      with:
+        browser: chrome
+        build: npm run build
+        start: npm start
+        wait-on: 'http://localhost:8080'
+        config-file: cypress.config.js
+      env:
+        CI: true
+
+    - name: Build
+      run: npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: dist/
+        retention-days: 7
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: build
+        path: dist
+
+    # Add deployment step here based on your hosting requirements
+    # Example for GitHub Pages:
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
