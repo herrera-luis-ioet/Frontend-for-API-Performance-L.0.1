@@ -1,0 +1,7 @@
+build/
+dist/
+node_modules/
+coverage/
+.cache/
+*.min.js
+*.bundle.js
