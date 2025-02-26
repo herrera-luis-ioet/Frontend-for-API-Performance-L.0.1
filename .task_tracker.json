@@ -73,15 +73,15 @@
       "subtasks": {
         "Task3SubTask1": {
           "description": "Implement unit tests for common components",
-          "status": "to-do",
+          "status": "completed",
           "micro_agent": "TestCodeWritingAgent",
-          "details": "Create comprehensive unit tests for ErrorBoundary, Loading, and MainLayout components using Jest and React Testing Library"
+          "details": "Successfully implemented comprehensive unit tests for ErrorBoundary, Loading, and MainLayout components. Tests cover core functionality, error handling, accessibility, and component integration. Test suite includes proper setup with Jest and React Testing Library."
         },
         "Task3SubTask2": {
           "description": "Implement integration tests",
-          "status": "to-do",
+          "status": "in-progress",
           "micro_agent": "TestCodeWritingAgent",
-          "details": "Create integration tests for component interactions, routing, and API integration using React Testing Library and MSW for API mocking"
+          "details": "Implementing integration tests for component interactions, routing, and API integration. Will use React Testing Library for component testing and Mock Service Worker (MSW) for API mocking."
         },
         "Task3SubTask3": {
           "description": "Implement end-to-end tests",
