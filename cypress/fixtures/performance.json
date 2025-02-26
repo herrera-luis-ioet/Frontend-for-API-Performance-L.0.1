@@ -1,0 +1,25 @@
+{
+  "metrics": [
+    {
+      "id": 1,
+      "endpoint": "/api/users",
+      "responseTime": 245,
+      "errorRate": 0.02,
+      "requestCount": 1500,
+      "timestamp": "2023-12-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "endpoint": "/api/products",
+      "responseTime": 180,
+      "errorRate": 0.01,
+      "requestCount": 2500,
+      "timestamp": "2023-12-01T10:00:00Z"
+    }
+  ],
+  "summary": {
+    "totalRequests": 4000,
+    "averageResponseTime": 212.5,
+    "totalErrors": 45
+  }
+}
