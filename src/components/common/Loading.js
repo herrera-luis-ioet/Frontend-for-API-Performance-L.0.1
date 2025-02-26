@@ -32,8 +32,8 @@ const LoadingText = styled.p`
 function Loading({ message = 'Loading...' }) {
   return (
     <LoadingContainer>
-      <Spinner />
-      <LoadingText>{message}</LoadingText>
+      <Spinner data-testid="loading-spinner" />
+      <LoadingText data-testid="loading-text">{message}</LoadingText>
     </LoadingContainer>
   );
 }

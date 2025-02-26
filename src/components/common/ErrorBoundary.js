@@ -57,12 +57,12 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <ErrorContainer>
-          <ErrorTitle>Something went wrong</ErrorTitle>
-          <ErrorMessage>
+        <ErrorContainer data-testid="error-boundary">
+          <ErrorTitle data-testid="error-title">Something went wrong</ErrorTitle>
+          <ErrorMessage data-testid="error-message">
             {this.state.error?.message || 'An unexpected error occurred'}
           </ErrorMessage>
-          <RetryButton onClick={this.handleRetry}>
+          <RetryButton data-testid="retry-button" onClick={this.handleRetry}>
             Try Again
           </RetryButton>
         </ErrorContainer>
