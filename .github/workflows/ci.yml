@@ -1,0 +1,107 @@
+name: CI/CD
+
+# Trigger the workflow on push and pull requests to main branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Prevent multiple deployments running at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15  # Set timeout to prevent hanging jobs
+    
+    steps:
+    - uses: actions/checkout@v3  # Updated to v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3  # Updated to v3
+      with:
+        node-version: '16.x'
+        cache: 'npm'
+    
+    - name: Cache Cypress binary
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/Cypress
+        key: cypress-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          cypress-${{ runner.os }}-
+    
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Lint
+      run: npm run lint
+      continue-on-error: false
+    
+    - name: Unit & Integration Tests
+      run: npm test -- --coverage --ci --maxWorkers=2
+    
+    - name: Upload test coverage
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage
+        path: coverage/
+        retention-days: 14
+    
+    - name: E2E Tests
+      run: npm run cy:run
+      env:
+        CI: true
+    
+    - name: Build
+      run: npm run build
+      env:
+        CI: true
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}  # Configure this in GitHub repository settings
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build
+      run: npm run build
+      env:
+        CI: true
+        NODE_ENV: production
+    
+    - name: Deploy
+      env:
+        DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        NODE_ENV: production
+      run: |
+        if [ -z "$DEPLOY_TOKEN" ]; then
+          echo "Error: DEPLOY_TOKEN is not set"
+          exit 1
+        fi
+        
+        echo "Starting deployment to production..."
+        # Add deployment script here based on your hosting platform
+        # For example, if using AWS S3 + CloudFront:
+        # aws s3 sync dist/ s3://${{ secrets.AWS_S3_BUCKET }} --delete
+        # aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_ID }} --paths "/*"
+        
+        echo "Deployment completed successfully"
