@@ -2,28 +2,45 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Loading from '../components/common/Loading';
 
-describe('Loading', () => {
-  it('renders with default loading message', () => {
+describe('Loading Component', () => {
+  test('renders loading spinner', () => {
     render(<Loading />);
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
-  it('renders with custom loading message', () => {
+  test('displays default loading message', () => {
+    render(<Loading />);
+    expect(screen.getByTestId('loading-text')).toHaveTextContent('Loading...');
+  });
+
+  test('displays custom loading message', () => {
     const customMessage = 'Please wait...';
     render(<Loading message={customMessage} />);
-    expect(screen.getByText(customMessage)).toBeInTheDocument();
+    expect(screen.getByTestId('loading-text')).toHaveTextContent(customMessage);
   });
 
-  it('renders spinner element', () => {
-    const { container } = render(<Loading />);
-    // Using a more specific test-id for the spinner
-    const spinner = container.querySelector('[data-testid="loading-spinner"]');
-    expect(spinner).toBeInTheDocument();
-  });
-
-  it('has accessible loading indicator', () => {
+  test('spinner has correct styling', () => {
     render(<Loading />);
-    const loadingContainer = screen.getByText('Loading...').closest('div');
-    expect(loadingContainer).toBeVisible();
+    const spinner = screen.getByTestId('loading-spinner');
+    const styles = window.getComputedStyle(spinner);
+    
+    expect(spinner).toHaveStyle({
+      width: '40px',
+      height: '40px',
+      borderRadius: '50%'
+    });
+  });
+
+  test('loading container has correct layout', () => {
+    const { container } = render(<Loading />);
+    const loadingContainer = container.firstChild;
+    
+    expect(loadingContainer).toHaveStyle({
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '2rem',
+      minHeight: '200px'
+    });
   });
 });

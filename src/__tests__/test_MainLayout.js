@@ -2,48 +2,69 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import MainLayout from '../components/layout/MainLayout';
 
-// Mock Navigation component since it might have router dependencies
+// Mock the Navigation component since we're only testing MainLayout
 jest.mock('../components/Navigation', () => {
   return function MockNavigation() {
-    return <nav data-testid="mock-navigation">Navigation</nav>;
+    return <div data-testid="mock-navigation">Navigation</div>;
   };
 });
 
-describe('MainLayout', () => {
-  it('renders header with title', () => {
-    render(
-      <MainLayout>
-        <div>Test Content</div>
-      </MainLayout>
-    );
+describe('MainLayout Component', () => {
+  test('renders header with correct title', () => {
+    render(<MainLayout />);
     expect(screen.getByText('API Performance Dashboard')).toBeInTheDocument();
   });
 
-  it('renders navigation component', () => {
-    render(
-      <MainLayout>
-        <div>Test Content</div>
-      </MainLayout>
-    );
+  test('renders navigation component', () => {
+    render(<MainLayout />);
     expect(screen.getByTestId('mock-navigation')).toBeInTheDocument();
   });
 
-  it('renders children content', () => {
+  test('renders children content', () => {
     render(
       <MainLayout>
-        <div>Test Content</div>
+        <div data-testid="test-content">Test Content</div>
       </MainLayout>
     );
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
+    expect(screen.getByTestId('test-content')).toBeInTheDocument();
   });
 
-  it('wraps content in ErrorBoundary', () => {
+  test('wraps content in ErrorBoundary', () => {
     const { container } = render(
       <MainLayout>
         <div>Test Content</div>
       </MainLayout>
     );
-    // ErrorBoundary is a class component that wraps the main content
-    expect(container.querySelector('main')).toBeInTheDocument();
+    
+    // ErrorBoundary should be present in the main section
+    const main = container.querySelector('main');
+    expect(main.children[0].className).toBeTruthy(); // ErrorBoundary has styled components class
+  });
+
+  test('layout container has correct styling', () => {
+    const { container } = render(<MainLayout />);
+    expect(container.firstChild).toHaveStyle({
+      minHeight: '100vh',
+      backgroundColor: '#f5f5f5'
+    });
+  });
+
+  test('header has correct styling', () => {
+    render(<MainLayout />);
+    const header = screen.getByRole('banner');
+    expect(header).toHaveStyle({
+      backgroundColor: '#ffffff',
+      padding: '1rem 2rem'
+    });
+  });
+
+  test('main content has correct layout', () => {
+    const { container } = render(<MainLayout />);
+    const main = container.querySelector('main');
+    expect(main).toHaveStyle({
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '2rem'
+    });
   });
 });
