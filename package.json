@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.23.3",
+    "@babel/plugin-transform-runtime": "^7.23.3",
     "@babel/preset-env": "^7.23.3",
     "@babel/preset-react": "^7.23.3",
     "@testing-library/jest-dom": "^6.1.4",
@@ -43,8 +44,7 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "format": "prettier --write \"src/**/*.{js,jsx}\"",
-    "prepare": "husky install"
+    "format": "prettier --write \"src/**/*.{js,jsx}\""
   },
   "browserslist": {
     "production": [
